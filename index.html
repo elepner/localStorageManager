@@ -8,14 +8,59 @@
   <body>
         <h1>Hello World</h1> 
         <script>
-            window.getLocalStorageManager().set("Test", {a: "TestA", b: "TestB"}, 10);
-            window.getLocalStorageManager().set("Test2", {a: "TestA", b: "TestB"});
-            window.getLocalStorageManager().set("StringValue", "__test_string__");
-            var var1 = window.getLocalStorageManager().get("Test");
-            var var2 = window.getLocalStorageManager().get("Test2");
-            var var3 = window.getLocalStorageManager().get("StringValue");
-            window.getLocalStorageManager().setProperty("NoSuchKey", "Key", "Value");
             
-        </script> 
+            function assert(key, expected){
+                var obj = window.getLocalStorageManager().get(key);
+                if(JSON.stringify(expected) !== JSON.stringify(obj)) {
+                    console.log("Assert failed. Expected: ", expected, "Actual: ", obj);
+                     
+              }
+            }
+            
+            var mgr = window.getLocalStorageManager();
+            
+            var testObject1 = {a: "TestA", b: "TestB"};
+            var testObject2 = {c: "TestA", d: {test: "ABC", test2: "DEF"}};
+            var testString = "__test_string__"
+            mgr.set("Key1", testObject1, 1.0);
+            mgr.set("Key2", testObject2, 1.2);
+            mgr.set("Key3", testString, 1.5);
+            mgr.set("Key4", "Long Living String", 60*60);
+            mgr.set("Key5", "String2", 60);
+            
+            setTimeout(function(){
+                assert("Key1", testObject1);
+                assert("Key2", testObject2);
+                assert("Key3", testString);
+            }, 500);
+            try {
+                mgr.setProperty("Key3", "PropName", 1);
+                throw new Error("Expected exception");
+            } catch (err){
+                
+            }
+            
+            setTimeout(function(){
+                assert("Key1");
+                assert("Key2", testObject2);
+                assert("Key3", testString);
+                assert("Key5", "String2");
+                mgr.setProperty("Key2", "d", "JustString", 0.4);
+                testObject2.d = "JustString";
+                
+                setTimeout(function(){
+                    assert("Key2", testObject2);
+                    mgr.remove("Key5");
+                }, 300);
+                
+                setTimeout(function(){
+                    assert("Key2");
+                    assert("Key3");
+                    assert("Key5");
+                    console.log("Assertion completed");
+                }, 500);
+            }, 1100);
+        </script>
+        
   </body>
 </html>

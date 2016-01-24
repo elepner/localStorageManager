@@ -1,15 +1,68 @@
+
+
+
 (function(){
+    
+    //Define class which handles triggering remove events by timeout.
+    var ExpiryCounter = function(onExpireListener, secondsOrDateExpiry, key){
+        this.removeFunction = function(){
+            this.expired = true;
+            if(this.expireListener) this.expireListener();
+        }.bind(this);
+        
+        
+        this.expireListener = onExpireListener;
+        
+        this.setExpiry(secondsOrDateExpiry);
+        this.key = key;
+    }
+
+    ExpiryCounter.prototype.setExpiry = function(secondsOrDate){
+        var now = new Date();
+        var timeToLive = 0;
+        if(secondsOrDate instanceof Date){
+            timeToLive = Math.max(0, secondsOrDate.getTime() - now.getTime());
+        } else {
+            timeToLive = Math.max(0, secondsOrDate * 1000);
+        }
+        
+        this.timeoutId = setTimeout(this.removeFunction, timeToLive);
+        this.expiryDate = now.setSeconds(now.getSeconds() + timeToLive);
+        this.expirySeconds = timeToLive;
+        return timeToLive;
+    }
+
+    ExpiryCounter.prototype.updateTimer = function(secondsOrDateExpiry){
+        if(this.expired) throw new Error("The object has already expired")
+        clearTimeout(this.timeoutId);
+        this.setExpiry(secondsOrDateExpiry);
+    }
+
+    ExpiryCounter.prototype.dispose = function(){
+        this.expired = true;
+        clearTimeout(this.timeoutId);
+    }
+    
+    
     if(window.getLocalStorageManager){
         return;
     }
     
     var managerObject = {};
-    var storageCheckingTime = 1;
+    var expiryCounters = {};
     function setObject(key, object, expiry){
         var expirationTime;
         if(expiry){
             var timeObject = new Date(); 
             var expirationTime = new Date(timeObject.getTime() + 1000*expiry); 
+        }
+        
+        if(expiryCounters[key]){
+            expiryCounters[key].updateTimer(expiry);
+        } else {
+            expiryCounters[key] = new ExpiryCounter(function(){
+                managerObject.remove(key);
+            }, expiry, key);
         }
         
         object.expiry = expirationTime;
@@ -25,11 +78,16 @@
     }
     
     managerObject.get = function(key){
-        return JSON.parse(localStorage.getItem(key)).value;
+        return (JSON.parse(localStorage.getItem(key)) || {}).value;
     }
     
     managerObject.remove = function(key){
-        localStorage.removeItem(key)
+        localStorage.removeItem(key);
+        if(expiryCounters[key]){
+            expiryCounters[key].dispose();
+            delete expiryCounters[key];
+        }
+            
     }
     
     managerObject.setProperty = function(key, property, value, expiry){
@@ -50,34 +108,36 @@
         
     }
     
-    function watchDog(){
-        
-        for (var i = 0; i<localStorage.length; i++) {
-            var lsItem = localStorage.getItem(localStorage.key(i));
-            var storedObject;
-            try{
-                 storedObject = JSON.parse(lsItem);
-            } catch(err) {
-                continue;
-            }
-            if(!storedObject) continue;
-            
-            if(storedObject.expiry && typeof storedObject.expiry === 'string') {
-                var now = new Date();
-                var expiry = new Date(storedObject.expiry)
-                if(now > expiry) {
-                    localStorage.removeItem(localStorage.key(i))
-                }
-            }
+    function fromJSON(key, stringValue){
+        var lsObject;
+        try{
+            lsObject = JSON.parse(stringValue);
+        } catch(err) {
+            return null;
         }
         
-        setTimeout(watchDog, storageCheckingTime*1000);
+        if(!lsObject) return null;
+        
+        if(lsObject.expiry && typeof lsObject.expiry === 'string') {
+            var expiry = new Date(lsObject.expiry)
+            return new ExpiryCounter(function(){
+                managerObject.remove(key);
+            }, expiry, key);
+        }
     }
     
-    watchDog();
+    //Init counters;
+    Object.keys(localStorage).map(function(key){
+        return {key: key, expiryCounter: fromJSON(key, localStorage.getItem(key))}
+    }).filter(function(obj){
+        return obj.expiryCounter!==null;
+    }).forEach(function(obj){
+       expiryCounters[obj.key] = obj.expiryCounter; 
+    });
     
     window.getLocalStorageManager = function(){
         return managerObject;
     }
     
 })();
+
