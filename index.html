@@ -1,0 +1,21 @@
+<html>
+
+  <head>
+    <title>Local Storage Stuff</title>
+  </head>
+    <script src="/Scripts/localStorageManager.js"></script>
+  <!-- 3. Display the application -->
+  <body>
+        <h1>Hello World</h1> 
+        <script>
+            window.getLocalStorageManager().set("Test", {a: "TestA", b: "TestB"}, 10);
+            window.getLocalStorageManager().set("Test2", {a: "TestA", b: "TestB"});
+            window.getLocalStorageManager().set("StringValue", "__test_string__");
+            var var1 = window.getLocalStorageManager().get("Test");
+            var var2 = window.getLocalStorageManager().get("Test2");
+            var var3 = window.getLocalStorageManager().get("StringValue");
+            window.getLocalStorageManager().setProperty("NoSuchKey", "Key", "Value");
+            
+        </script> 
+  </body>
+</html>

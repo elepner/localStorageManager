@@ -1,0 +1,16 @@
+{
+  "name": "lsManager",
+  "version": "1.0.0",
+  "scripts": {
+    
+  },
+  
+  "license": "ISC",
+  "dependencies": {
+    
+  },
+  "devDependencies": {
+    "node-static": ""
+    
+  }
+}
