@@ -6,14 +6,21 @@
     <script src="/Scripts/localStorageManager.js"></script>
   <!-- 3. Display the application -->
   <body>
-        <h1>Hello World</h1> 
+        <h1>Assert Status:</h1>
+         <div id="assert">
+             <p id="progress_id">In Progress</p>
+         </div>
         <script>
+            
+            var assertId = 0;
             
             function assert(key, expected){
                 var obj = window.getLocalStorageManager().get(key);
+                
                 if(JSON.stringify(expected) !== JSON.stringify(obj)) {
-                    console.log("Assert failed. Expected: ", expected, "Actual: ", obj);
-                     
+                    var message = "Assert with number: "+ ++assertId + " failed. Expected: " + expected+ " Actual: " + obj;
+                    console.log(message);
+                    document.getElementById("assert").appendChild(document.createTextNode(message));
               }
             }
             
@@ -27,11 +34,12 @@
             mgr.set("Key3", testString, 1.5);
             mgr.set("Key4", "Long Living String", 60*60);
             mgr.set("Key5", "String2", 60);
-            
             setTimeout(function(){
                 assert("Key1", testObject1);
                 assert("Key2", testObject2);
                 assert("Key3", testString);
+                assert("Key4", "Long Living String");
+                assert("Key5", "String2");
             }, 500);
             try {
                 mgr.setProperty("Key3", "PropName", 1);
@@ -57,6 +65,7 @@
                     assert("Key2");
                     assert("Key3");
                     assert("Key5");
+                    document.getElementById("progress_id").innerHTML = "Completed!"
                     console.log("Assertion completed");
                 }, 500);
             }, 1100);
