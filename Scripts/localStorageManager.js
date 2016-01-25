@@ -44,7 +44,7 @@
     }
     
     
-    if(window.getLocalStorageManager){
+    if(window.getStorageManager){
         return;
     }
     
@@ -135,7 +135,7 @@
        expiryCounters[obj.key] = obj.expiryCounter; 
     });
     
-    window.getLocalStorageManager = function(){
+    window.getStorageManager = function(){
         return managerObject;
     }
     

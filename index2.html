@@ -1,0 +1,43 @@
+<html>
+    <head>
+    <script src="https://code.jquery.com/jquery-2.1.3.js"></script>
+    <script src="storageManager.js"></script>
+	<script>
+
+    $( document ).ready( function() {
+        var storageManager = getStorageManager();
+        
+        storageManager.set( "clicksCounter1", 7, 60 );
+
+        var numOfClicks = storageManager.get( "clicksCounter1" );
+
+        if ( numOfClicks !== 7)
+            logMsg( "Get didn't return 7 but: " + numOfClicks );
+
+        storageManager.remove( "clicksCounter1" );
+        numOfClicks = storageManager.get( "clicksCounter1" );
+
+        if ( numOfClicks !== undefined)
+            logMsg( "The value for clicksCounter1 wasnt deleted" );
+
+        storageManager.setProperty( "key2", "attr3", 13, 60 );
+
+        var obj = storageManager.get( "key2" ); // Will return: { 'attr3' : 13 }
+
+       if( typeof( obj ) === "undefined" || typeof( obj.attr3 ) === "undefined" || obj.attr3 !== 13 )
+          logMsg( "Property is not getted" );
+
+       logMsg( "FINISHED!" );
+    });
+
+    function logMsg( message ) {
+        var currMSG = $( "#results" ).html();
+        $( "#results").html( currMSG + "<br/>" + message );
+    }
+     
+    </script>
+  </head>
+  <body>
+  <div id="results">Results</div>
+  </body>
+<html>
